@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>업무 관리</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#eef1f4;
+    --surface:#ffffff;
+    --surface-2:#eaf6fc;
+    --border:#1d3a4d;
+    --text:#0b2c40;
+    --muted:#5f7c8f;
+    --amber:#1363df;
+    --amber-dim:#dde9fb;
+    --yellow:#47b5ff;
+    --yellow-dim:#e2f4ff;
+    --blue:#06283d;
+    --blue-dim:#dff6ff;
+    --red:#c1503f;
+    --red-dim:#f9ddd6;
+    --teal:#1363df;
+    --teal-dim:#dff6ff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px;}
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+  h1{
+    font-family:'Pretendard', sans-serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .today-str{color:var(--muted);font-size:13px;margin-top:4px;}
+  .header-actions{display:flex;gap:8px;}
+  .header-mascot-zone{position:relative;}
+  .mascot-icon{
+    position:absolute;
+    right:2px;
+    bottom:-1px;
+    width:52px;
+    height:auto;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+    z-index:5;
+  }
+  .mascot-icon-2{
+    position:absolute;
+    right:58px;
+    bottom:-1px;
+    width:46px;
+    height:auto;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+    z-index:5;
+  }
+  .tool-btn{
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--muted);
+    border-radius:7px;
+    padding:7px 12px;
+    font-size:12.5px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .tool-btn:hover{border-color:var(--amber);color:var(--amber);}
+  .top-row{display:grid;grid-template-columns:1.15fr 1fr 0.85fr;gap:20px;align-items:stretch;margin-bottom:26px;}
+  .top-row > .capture, .top-row > .panel{box-sizing:border-box;display:flex;flex-direction:column;}
+  @media (max-width:960px){.top-row{grid-template-columns:1fr;}}
+  .panel-compact{padding:14px;}
+  .panel-compact .cal-title{font-size:13px;}
+  .panel-compact .cal-nav button{width:22px;height:22px;font-size:12px;}
+  .panel-compact .cal-dow{font-size:9.5px;padding-bottom:4px;}
+  .panel-compact .cal-cell{padding:3px 3px;font-size:10px;border-radius:5px;}
+  .panel-compact .cal-grid{gap:2px;}
+  .panel-compact .cal-dots{gap:2px;margin-top:2px;}
+  .panel-compact .cal-dot{width:4px;height:4px;}
+  .capture-toggles{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;}
+  .stats-donut-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  #statsChart{flex:1;display:flex;align-items:center;}
+  #statsChart .stats-donut-wrap{width:100%;}
+  #statsChart .empty{width:100%;}
+  .stats-donut{flex-shrink:0;}
+  .stats-legend{width:100%;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px 18px;}
+  .stats-legend-item{display:flex;align-items:center;gap:6px;font-size:12.5px;}
+  .stats-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .stats-legend-name{color:var(--text);font-weight:600;white-space:nowrap;}
+  .stats-legend-pct{color:var(--muted);font-size:11px;flex-shrink:0;}
+  .stat-pct-label{cursor:pointer;}
+  .stat-pct-label:hover{opacity:0.75;}
+  .capture{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:14px;
+    box-shadow:0 1px 3px rgba(43,42,38,.04);
+  }
+  .capture h2{margin-bottom:10px;}
+  .capture-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .capture-fields{flex:1;display:flex;flex-direction:column;justify-content:center;}
+  .capture input[type=text]{
+    flex:1 1 260px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:10px 12px;
+    color:var(--text);
+    font-size:14px;
+    font-family:inherit;
+  }
+  .capture input[type=text]:focus{outline:1px solid var(--amber);}
+  .capture input[type=date]{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:10px 10px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:13px;
+    color-scheme: light;
+  }
+  .capture input[type=month]{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:10px 10px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:13px;
+    color-scheme: light;
+  }
+  .capture select{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:10px 10px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .capture textarea{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:9px 12px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:13px;
+    margin-top:8px;
+    resize:vertical;
+    min-height:38px;
+  }
+  .capture textarea:focus{outline:1px solid var(--amber);}
+  #taskInput{font-size:16px;padding:13px 14px;}
+  #memoInput{font-size:14px;padding:12px 14px;min-height:58px;}
+  .repeat-options{
+    display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;
+  }
+  .repeat-options select, .repeat-options input[type=number]{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:8px 10px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:13px;
+  }
+  .repeat-options input[type=number]{width:130px;}
+  .quickdates{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .qd-btn{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--muted);
+    border-radius:6px;
+    padding:5px 10px;
+    font-size:12px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .qd-btn:hover{border-color:var(--amber);color:var(--amber);}
+  .qd-btn.active{border-color:var(--amber);color:var(--amber);background:var(--amber-dim);}
+  label.recur{
+    display:flex;align-items:center;gap:6px;
+    color:var(--muted);font-size:12px;margin-top:10px;cursor:pointer;
+  }
+  .addbtn{
+    background:var(--amber);
+    color:#ffffff;
+    border:none;
+    border-radius:7px;
+    padding:10px 18px;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .addbtn:hover{filter:brightness(1.08);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+  .grid > .panel + .panel{margin-top:0;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:18px;
+    box-shadow:0 1px 3px rgba(43,42,38,.04);
+  }
+  .panel + .panel{margin-top:20px;}
+  .top-row > .panel + .panel{margin-top:0;}
+  .panel h2, .capture h2{
+    font-family:'Pretendard', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    margin:0 0 4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel-icon{
+    width:26px;height:26px;
+    border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .panel-icon svg{width:15px;height:15px;}
+  .panel-icon.c-orange{background:var(--amber);}
+  .panel-icon.c-yellow{background:var(--yellow);}
+  .panel-icon.c-blue{background:var(--blue);}
+  .panel-icon.c-dark{background:var(--text);}
+  .panel .sub{color:var(--muted);font-size:12px;margin-bottom:14px;}
+  .task-row{
+    display:flex;align-items:flex-start;gap:10px;
+    padding:10px 0;
+    border-top:1px solid var(--border);
+  }
+  .task-row:first-of-type{border-top:none;}
+  .task-row input[type=checkbox]{
+    margin-top:3px;
+    width:16px;height:16px;
+    accent-color:var(--amber);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .task-body{flex:1;min-width:0;}
+  .task-text{font-size:14px;line-height:1.4;word-break:break-word;}
+  .task-meta{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .task-row.overdue .task-meta{color:var(--red);}
+  .task-row.today .task-meta{color:var(--amber);}
+  .badge{
+    display:inline-block;
+    font-size:10.5px;
+    padding:2px 7px;
+    border-radius:5px;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .badge.overdue{background:var(--red-dim);color:var(--red);}
+  .badge.today{background:var(--amber-dim);color:var(--amber);}
+  .badge.soon{background:var(--amber-dim);color:var(--amber);}
+  .badge.upcoming{background:var(--teal-dim);color:var(--teal);}
+  .badge.important{background:var(--red-dim);color:var(--red);font-weight:600;}
+  .project-group{
+    margin-bottom:12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:4px 14px 8px;
+    transition:outline .1s;
+  }
+  .project-group + .project-group{margin-top:0;}
+  .project-group.dragging{opacity:.4;}
+  .project-group.drag-over{outline:2px dashed var(--amber);outline-offset:3px;}
+  .project-name{
+    font-family:'Pretendard', sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    color:var(--amber);
+    padding:10px 0 8px;
+  }
+  .project-name[draggable="true"]{cursor:grab;}
+  .project-name[draggable="true"]:active{cursor:grabbing;}
+  .drag-grip{color:var(--muted);font-weight:400;margin-right:6px;font-size:12px;letter-spacing:-1px;}
+  .project-group .task-row{border-top:1px solid var(--surface-2);}
+  .project-count{color:var(--muted);font-weight:400;font-size:11.5px;margin-left:6px;}
+  .proj-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle;}
+  .task-text.clickable{cursor:pointer;}
+  .task-text.clickable:hover{color:var(--amber);}
+  .caret{color:var(--muted);font-size:10px;margin-right:4px;display:inline-block;transition:transform .15s;}
+  .caret.open{transform:rotate(90deg);}
+  .task-memo{
+    display:none;
+    background:var(--surface-2);
+    border-left:2px solid var(--amber);
+    border-radius:0 6px 6px 0;
+    padding:8px 10px;
+    margin-top:7px;
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--muted);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .task-memo.open{display:block;}
+  .edit-content-input{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--amber);
+    border-radius:6px;
+    padding:7px 9px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  .edit-memo-input{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:7px 9px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:12.5px;
+    resize:vertical;
+    min-height:50px;
+    margin-bottom:6px;
+  }
+  .edit-actions{display:flex;gap:6px;}
+  .edit-actions button{
+    border:none;border-radius:6px;
+    padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;
+  }
+  .edit-actions .save-edit{background:var(--amber);color:#ffffff;font-weight:600;}
+  .edit-actions .cancel-edit{background:var(--surface-2);color:var(--muted);border:1px solid var(--border);}
+  .edit-btn{
+    background:none;border:none;color:var(--muted);
+    cursor:pointer;font-size:13px;line-height:1;padding:2px 4px;flex-shrink:0;
+  }
+  .edit-btn:hover{color:var(--amber);}
+  .subhead{
+    font-size:11.5px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    margin:14px 0 6px;
+  }
+  .subhead:first-of-type{margin-top:0;}
+  #quickMemoInput{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:9px 12px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:12.5px;
+    resize:vertical;
+    min-height:90px;
+  }
+  #quickMemoInput:focus{outline:1px solid var(--amber);}
+  .del{
+    background:none;border:none;color:var(--muted);
+    cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;
+  }
+  .del:hover{color:var(--red);}
+  .empty{color:var(--muted);font-size:13px;padding:6px 0 2px;}
+  /* calendar */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-top:10px;margin-bottom:12px;}
+  .cal-nav{display:flex;gap:6px;}
+  .cal-nav button{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;
+  }
+  .cal-nav button:hover{border-color:var(--amber);}
+  .cal-title{font-family:'Pretendard',sans-serif;font-weight:700;font-size:15px;white-space:nowrap;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{text-align:center;font-size:11px;color:var(--muted);padding-bottom:6px;}
+  .cal-cell{
+    aspect-ratio:1/0.85;
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:5px 5px;
+    font-size:12px;
+    position:relative;
+    cursor:default;
+    background:var(--surface-2);
+    overflow:hidden;
+  }
+  .cal-cell.blank{border-color:transparent;background:transparent;}
+  .cal-cell.istoday{border-color:var(--amber);}
+  .cal-daynum{color:var(--muted);}
+  .cal-cell.istoday .cal-daynum{color:var(--amber);font-weight:600;}
+  .cal-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;}
+  .cal-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);}
+  .cal-dot.overdue{background:var(--red);}
+  /* 날짜 클릭 팝업(모달) */
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(43,42,38,.35);
+    display:none;align-items:center;justify-content:center;
+    z-index:100;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    max-width:420px;width:100%;
+    max-height:75vh;overflow-y:auto;
+    box-shadow:0 16px 44px rgba(43,42,38,.18);
+  }
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .modal-header h3{
+    font-family:'Pretendard', sans-serif;
+    font-size:16px;margin:0;font-weight:700;
+  }
+  .modal-close{
+    background:none;border:none;font-size:20px;color:var(--muted);
+    cursor:pointer;line-height:1;padding:2px 6px;
+  }
+  .modal-close:hover{color:var(--text);}
+  .header-title{display:flex;align-items:center;gap:10px;}
+  .logo-badge{
+    width:34px;height:34px;border-radius:9px;
+    background:var(--amber);
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .logo-badge svg{width:19px;height:19px;}
+  .tabs{display:flex;gap:22px;border-bottom:1px solid var(--border);margin-bottom:24px;}
+  .tab-btn{
+    background:none;border:none;
+    padding:10px 2px;font-size:14.5px;font-weight:600;
+    color:var(--muted);cursor:pointer;font-family:inherit;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--text);border-bottom-color:var(--amber);}
+  .career-month{
+    font-family:'Pretendard', sans-serif;
+    font-weight:700;font-size:13px;color:var(--muted);
+    padding:14px 0 6px;border-top:1px solid var(--border);
+  }
+  .career-month:first-child{border-top:none;padding-top:0;}
+  .career-entry{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 16px;
+    margin-bottom:10px;
+  }
+  .career-toggle-head{display:flex;align-items:center;gap:8px;cursor:pointer;}
+  .career-toggle-label{font-weight:700;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .career-entry-body{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+  .career-entry-body.open{display:block;}
+  .career-list-tools{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .career-entry-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;}
+  .career-entry-title{font-weight:700;font-size:14.5px;flex:1;min-width:0;}
+  .career-entry-date{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .career-entry-project{font-size:11.5px;color:var(--muted);margin-bottom:6px;}
+  .career-entry-content{font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+  .career-entry-actions{display:flex;gap:10px;margin-top:8px;}
+  .career-tilde{align-self:center;color:var(--muted);font-size:13px;}
+  .career-field-label{font-size:11.5px;color:var(--muted);margin-top:12px;margin-bottom:6px;}
+  .career-contrib-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .career-contrib-label{font-size:12.5px;color:var(--muted);}
+  .career-contrib-row input[type=number]{
+    width:60px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:7px;
+    padding:8px 8px;
+    color:var(--text);
+    font-family:inherit;
+    font-size:13px;
+    text-align:right;
+  }
+  .career-contrib-pct{font-size:12.5px;color:var(--muted);margin-right:10px;}
+  .career-chip-row{display:flex;flex-wrap:wrap;gap:7px;}
+  .career-chip{
+    background:var(--surface);
+    border:1.5px solid var(--chip-color, var(--border));
+    color:var(--chip-color, var(--text));
+    border-radius:999px;
+    padding:5px 13px;
+    font-size:12px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .career-chip.active{background:var(--chip-color, var(--amber));color:#fff;}
+  .career-cat-badge{
+    display:inline-block;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:5px;
+    padding:2px 9px;
+    font-size:11px;
+    font-weight:600;
+  }
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true"><symbol id="pxi-plus" viewBox="0 0 8 8"><rect x="3" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="5" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="3" y="7" width="1" height="1"/><rect x="4" y="7" width="1" height="1"/></symbol><symbol id="pxi-check" viewBox="0 0 8 8"><rect x="7" y="1" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/></symbol><symbol id="pxi-checkbold" viewBox="0 0 8 8"><rect x="6" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/></symbol><symbol id="pxi-clock" viewBox="0 0 8 8"><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="5" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/><rect x="3" y="7" width="1" height="1"/><rect x="4" y="7" width="1" height="1"/><rect x="5" y="7" width="1" height="1"/></symbol><symbol id="pxi-calendar" viewBox="0 0 8 8"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="7" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="0" y="7" width="1" height="1"/><rect x="1" y="7" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/><rect x="3" y="7" width="1" height="1"/><rect x="4" y="7" width="1" height="1"/><rect x="5" y="7" width="1" height="1"/><rect x="6" y="7" width="1" height="1"/><rect x="7" y="7" width="1" height="1"/></symbol><symbol id="pxi-folder" viewBox="0 0 8 8"><rect x="0" y="0" width="1" height="1"/><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="7" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="7" y="6" width="1" height="1"/><rect x="0" y="7" width="1" height="1"/><rect x="1" y="7" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/><rect x="3" y="7" width="1" height="1"/><rect x="4" y="7" width="1" height="1"/><rect x="5" y="7" width="1" height="1"/><rect x="6" y="7" width="1" height="1"/><rect x="7" y="7" width="1" height="1"/></symbol><symbol id="pxi-trophy" viewBox="0 0 8 8"><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="1" y="2" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></symbol><symbol id="pxi-list" viewBox="0 0 8 8"><rect x="0" y="0" width="1" height="1"/><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="1" y="2" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="5" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/></symbol><symbol id="pxi-pencil" viewBox="0 0 8 8"><rect x="6" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="0" y="7" width="1" height="1"/></symbol><symbol id="pxi-logocheck" viewBox="0 0 8 8"><rect x="0" y="0" width="1" height="1"/><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="5" y="0" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="7" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="7" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/><rect x="3" y="5" width="1" height="1"/><rect x="7" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="7" y="6" width="1" height="1"/><rect x="0" y="7" width="1" height="1"/><rect x="1" y="7" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/><rect x="3" y="7" width="1" height="1"/><rect x="4" y="7" width="1" height="1"/><rect x="5" y="7" width="1" height="1"/><rect x="6" y="7" width="1" height="1"/><rect x="7" y="7" width="1" height="1"/></symbol></svg>
+<div class="wrap">
+  <div class="header-mascot-zone">
+  <header>
+    <div class="header-title">
+      <span class="logo-badge"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-logocheck"/></svg></span>
+      <div>
+        <h1>업무 관리</h1>
+        <div class="today-str" id="todayStr"></div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="tool-btn" id="exportBtn">⬇ 백업</button>
+      <button class="tool-btn" id="importBtn">⬆ 복원</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabTasks">
+      <svg width="15" height="15" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><use href="#pxi-list"/></svg>
+      업무관리
+    </button>
+    <button class="tab-btn" id="tabCareer">
+      <svg width="15" height="15" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><use href="#pxi-trophy"/></svg>
+      커리어
+    </button>
+  </div>
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFUAAABbCAYAAAAC/8kqAAAWEUlEQVR4nO2dTYxsx3Xff+dU3f6YeR/zPoaUKYkiJctyTAtGohgGAseyQxpQIGvjhcGFtokNG5ZgGYizSmAbUGIEEgIRyCIrb7IQspAcGPIH4MQ2oECQrIgWDUuRBFohRJvk+5g3781X33vrnCyqbndPT/dM97CHfAR4gH7zpntu3ar/PXW+T7W4O6vQnTt3XFUXfi4iAGxtbclKA7/BtLOz491cZzEQEcwMVaWuax555JGV1iKrgvqRj3zEX3zxxdMHFWF7e5svfOELbG9vP3Tgfv/73/dnn32WnZ0dzGzMCNPUAdvv9/n85z/PU089tfQ64qoT+s53vsNLL7104n13H09ORDg4ODjBAQ8LxRh56aWXeO211xCRE/Ps1hJCoNfrrT7+qhe4O2Y2933IgHZPuW3blSf0RlBKibquSSnN5VKYrKeu67nrPY0WC8cFFOP859CBOf37abL3zSR3J4RwYs4dTb+nqiuv41RO3dnZ8W4SqkpKiUuXLnHlypWFT7ib1HA4ZG9vj52dHe+202nXvFHk7hweHtLv99na2looorr1bmxssL+/z+3bt11Vx+s4TREvBPXTn/60P/fcc4xGo/FNqqriS1/6Ek888cTcyXYkIty9e5ePfexjvPLKK8QYSSk9FDJWRHjsscf48pe/zGAwGHPsLDVNQ4yRg4MDPv7xj/PCCy+M56+qXLlyxV988cW5wC4EtWka7t27R0qJlBKqSgiBq1evcu3atTNZbm9vz3d2drh//z7uPhb+bzawIsKVK1cYDofcvHnzzHVcv36du3fv+t7e3pgxQghUVbXwmoWgdqzeNA0w0YjLCm1VHZsr3UPpwH0jaZYLO/szpbTSOO5+7JrTcFgIagdgx13doCGEpSbRKarph/EwyNUQAma29DogA9iB2OFx2vVLmVTn3bYxRvr9/vgJPyzb/6Itk5Xt1GWp1+vxoQ99iP39fcxsbEG82aACbG9vvzVBvXnzpnzxi1+8qOEfano4rfO3OL0N6gXQ26BeAL0N6gXQ26BeAF2Y9gc4urPjwR1xcEAw1mf6G3nUKZpxLAQQBJ96tYBUFf2rly/MC7lQUKMIGdRu8Wu0UWUOqLPDe4HVpQCuIIL7avHRVelCQc28AeDgDuKskVWXmEDZIji4ghiKYhfsf1woqHlFXrgKXAqwaxl6CXUgBuKZU91AlLXulgV0oaA6YIVbXYqMW9eaytY+jZI4SQ11UJfMuFIe9AXScqA6KHLqEuqdHVcv6qAL5hZ5OgFTMrdMrckLylLuM/lliUmdAU5w0KT5tt2mEUdSg9+57S5gCAHBHMKN6wvuvJoMXolTT1urmqE20bMwteRu/ZI/PT7OHGWzDKjL/I3ne3ViFbqHO3nYSLYQdI26a23bX2a4FMm6qcOok2ZnYrZOReaMH/FY7HRml0/tkDUrz/WBOsWhkBdj+BjEbvcjHFvk+LN10LT48E6mTyzaLFOFsTS+oDDkWhXVGEARXAQTH5v7QskGUKyrbtXdh+u4+cz/TYQkggs42QlBJe8m5wwtcX5aC6j17p4HikJGSGZoFfnTP/ufmCopGZgRVXns0Uf50Ad/AtqJ8T5e2uteY0FTFU+JxuFr33yBW3fvUIVIm2pElY1+n3/2T3+SYa+fg9VrdgbWxqneaVjJ/9/de8AnPvWb7Ozdp8uR9VT4xY/+As999j9TIcj0Pr0Apjk4GvF7n/ks//trX8HbFkEwEu989B38rz/+E4b9AebG8tmq5WiNiuq4DWruHNUjdnf3xjuzF5WjpgaVIujsGJjrxjaEyKhp2T84oq1HBIVkzmirvribssYoVTawJ65pZ5uqFplaxIDhaNATwY+O5qoOX+I1h0QEFaVtW8whpSk32UHMCWH9/s/SoJ5maveuXio7ObuE3QumXp5xlCCYT5UvJs8OgUbQgISYXdDpF3Li5QQMxaR7CeadcyHFMzbaNGLQj0h+4qgDbuOHnUY1eMBkMRTqq7Hyco9JcjGBn7ZPxi5L4VpRhoMhlzc2GTWJqEpQI3S5/26oEABhb/8AC0KbEoOwuPqjI0exKTdMBWIIRHPEDdWAWMNgGBn2IzH08WT0Y0UUQVRAhRB6kLKlski2iq9mJ6yN9w1QmXhUlzeGfO4zn6G2RGqNoIGoziPXt5CmBalAFcxoFD73X/8LX/3GN0hu6AzX+LRLVEgJY79NcIaDPr/97/4973rHO9joDyAlBnHApz7xSR7cfwDkYpBeiFQauDzcRBGsbtDQOxW0FRl1jXaqdyU2jggEFZ752Q8Xo1sKUClzqgOlwKLBIEa+9vw3+JM//zPqlBA7yTOz6xqHFCXbn5c3N/iNT32Kd/gjpNTiKSGq/PRP/hQOBFXcHCzvt0oUzNElKlVMVnNQ1uhRFfLs3Vvb0ouBtk0EVYSUjfBSNBw04mbZw9FcuWLJsNrQE3ajnOQW6XyxEgVLhrijQFu3VJrlaowRSwm3vAMkKKlpGXshqmcitqrftUbVlz18L8aqiODJCFK8J5mSTd32DkrUnOIwN1SEWCnezC7j5P6bCdngOG75gYaQuVCyDYV21zt4m1ARzBKIIOWnneIAvGmcamheWBfKK1wziRN1hv5kgQLUbYNoNXYZUzJOgCjzYGUyJmSAgmYnRBWtArSJcbChc5dLuY/LdPBssYnXXfnmKKoQyxK7aJVluVaUjHsXgT9+nSKkNnH96hY3rl7D8AknF5I5qIpPx72czeEQFR0X8aa6zpV5M8a9mUFQXAUTchwVcD0F1BX3/9pA7V27emJWdvuOgxXuLBw481dRA1Wv4rP/4feo+v0cjJkTPTrBSB4K0+e/DSr0qx7t6BCNMZtqftJdchW0iujVLZlWUacBsWZQSyTUPUfMV3XnRMcLkxPKJmttEYW6YWtjkzYZVdXDmrO7Wkz0GKjgUDcMYo/2aESsYg6sHLsjNJaIxJWj8zL1y1niYHEltSsQEO8htIge4thKmchUsqcKYAsi/tZ286YKQKpZpspR56U4RMASsVd40Gz8ME0gCXiMNLLaFm2DE0Ty9R6pJMAp7UynjN0S9QjLkFIV+aMr7AWnxcTo0tNZ+88gts7Kap/hy8LJQva4XCTL/BUjfYMjJUmVzT8HV6M9BYcIcOf2P7h7hYsitMQmspNusb+VYAuooRaggh/4KwTbcCMh4lTtgMeq+Q0Jpn3ELXOsO2InHd35RcDni8jLrLLxSeWBObgr/e1FyT3YsR1/IAektqXSgLpgjbO/fZ/23uE4StkoPBiOePDqrqfQYCVZJCpcu35d5Fvf/lv/xCd/lf17h6AV6onkxv0f3ufBew94IHsEDUilNPURP/aPfhxPigZFXdnY6/Pr/+JX+Oh7P3oxYfQ3kH7/r3/fP//CH3DQO0SswdsRoVfx/IvfJNT9SQrIA1cPLnPjy5vEFMkCLgfmf+nZZ4n79Yi/ev7/cLRzSPJABOrYEt51mY0ntrgXj+iHxFFraISv1l9FJSJaoa5cPhzwwF97E6FYH70qt3j+6JvctV2QFpGW9ijh7wEaQ9AcH0sBblV87/lv0a97ZOXlVP2KD//cz+Xt7260ZjQtJBIJA69p5RCp2hyHDBH3hNPiQIvjHtiUDTbbzTcVjHVRbS0ejVYbtFJclNQk+tbDtC1+hIEEiEO8hbbN6U0RQVL+qdEE8UCSAKIoQjToGwwSRIOkkgcx0CiIJiwdgbY03pLat/zOB8DNqL3GpCb5iGQH0IeRGkiNU2PaYtrg0o4VIXiO5xalGzP8If/XPXs4KrhEWqtwesQgWOojVUsT97MLak7wFtSoY8Vue+hX4/Atja5IQqqEVI42TY4LUGFsjNPbuKAmRI/ZhB8n43NcGCAmrVFa1B0Dgvaw5oj3bb6L9209wYHsogFq2cS3El+/9U32bQQYohVWXePvHjT8zZ3EIJiLCG7Z7++sGilWv8myscl1Zjengi7CiQkITrAGxbndbtCwgbf7KDn+K/uRH7/2fq6lIcF6uDgaW8Iw8D/qWziGU5Nrb/O9onpAPCIcAS2HZvT7PZ5558/ymz//CbAaDU5Lj/3hA5797/+ab/M9Gm1JVBwq/Pmr9/i/r+4QfJJQG9dOMf1zdSDWST4Vf+lIgF4MmLR8fXSf2gUhYTgjUwaN8tv//N/wVP9JokVUs/v72mt3+cP0p1nGzsw7ipecTqnl6AoPLvkmj6ZH0JRQd1qEg7bPwPoghouNYxX3CWzqFdQuHZ/tMuWOF0hZxM36ccdRFXIOKnnNAbFA5BkHyQ7ptl/nkeYaMWVQ3WFUNyiWK7M5FghbtuqvS+h3/z9JKoIe845kvd7Smui8vbFuPu7R9TnRtmlaAtQykHiOl/okZjpNZrkKZUKrRiEvhmZBnOfBBdEzp6qqqOeeVvM53tsULQR1HkOeWs8lM5zpXTznTaS5tz8uWJedozNhKnyRe51pLqjmOczn0/n5LkXC/C10gi8fgjb0+TQTY+0ytUV8LZpxbrEvWYOSgl9Eb/dRXQC9DeoF0NugrpOKmI0uk8xiR0p5UxT3hGi27lwS0QPBIioJx1ASSRU/IVUfRnk6h8QxMVLJmQi51wrP2j56dkKtW9+4BKisr+g9mVJcMYM1AVUctOtFKYpJ3XFRrIkM23fTb2rotSCBnm3j7U0kVmNB/tYiR4LRNAJH19D9x4nhGiKRaIlLrWKph2kA19KOpUiXNiyJyulS0sUmVXmJC1igEtjUx/ngo/+KK70+qTekaWq0VTbCT6A2uPj1XwgJ3sAwVLz3yi/yzktP42EE0hCAav8eN/o/Qkjt2XtvkUc1a32Z5LyUs48117jEP2ZY36BN0EtQ4XhbMmlvkR1/jFwwj2iCKj1Kn8fwNm/4IJEq7ZIOK6TKZUXT+GQX92QFS8xRpJn7UESCgImDGkkajH0s1pgfYVoVY1hyVm2dOu+88ZRzPFQXSJJT2bm60sAS7lLqaRtQQ3xO5czsWGR7NjJ1RKeqdrIYRGjd6ZeqOCUBCU81Kk3JjIZc1GDFmVoTp84GPZal83lwk6scp7Vc4JFSInjCkhGkj2vCvAQlJbeHToaQMaApJaKIEmNkMBjkyjtK1R7OqB7lspjU0mBIT1BiDhV6xAmUpO+5QHgYSMoqJmS0ljOjZg0qSqojR2GflpSLmlRp3OgP+qTOy0Lo9Xr0+33ixuYGTz/9NPfv38fcMTd6VY/+oM9f/OVfslH1wBMmgaO2gs1/UkJ6RfvpiJxAmES+31LkudAdD7gKXTudmeOpZTgc8pWvfJ0b8Q6BZtwjVjctTz/zzLis3RGqKvKe97xn8fHJv/s7v+P/6dP/kaYeldL7QPIhv/TcH+GPf5CWIeKRwAFGRKRiXaCe90CwZWINJ8d2lBasV/RI5sZkRozOhh3yxV/7efZe/gbi5dxD4Pr1G7z62u25N1wc+itywoDGDUq7fOgpLW2u7DMQNlAvaa5lMR0bxWdEvtZEs/VUxwrXOmUs3ee5JDT2Iim1SOzTakMSKzX4ZB0Sz3HWn4jQYDQY7hA10nqDesBtA5MKUcaR8nlWxEky1J2u46SzLkpGa2xAC6udGDk16Zk3vNxDMlgC4jmXJHTdLwLSo4NeupBlC5GIppYeLftW0EwZ/yCv9wBFShBaI2b5zL5ZAJdhUhehLWZClwzsTldwCtYO6uvpwRsfmFDsQyWDIV0xVUkJzSraLnnp7khYlK08R5D6+E0yqBIDTdOMjWCZ2kW2jEHjnqv1XI+30Ti4GFZqWE8UsS1JJ05BL5w66fEXbNySXgAXmIXB6WqvnLppLqI7pYQPioz97ne/y4PbgcZ7TKLoZxvGeaSuUbzEFrw7uthzIlHKtj8np84tFi7bOv+rJZlHKZ/vPpt+iFMCH2crNhwcHM2Gtk+lpTi1CyK4ww9+8DI7u0NaGZSjieYcZbSAhFw8XDpvQGJ2IKCU06RiIZ/TO5szDemquLV4J6qUOFw++MHB/LgMnxykm9iKiaZNK2nUpTv+ssR3UiqtM1K6oCVXvC3jAOQiCyEoeGpzj6rnRdIpj3G1xzloZgrZ3Vbc8oPXILil3I8gRZbKcXEj5UoDVCNNqsfcPf1dBqfR66/5747xmbeqGbIQcy2nNZCM5DVoxRhUT6W9aT2KyiRl7o99vDWsdSKTYonOKpjWBhPFVTLIflKRnUXnAFWmfk4yk75MLFUBb+jJEf2qQVIiuRSvJCux7NOsqb/D81ijJpG8ghBzvxZFFHEyQE+3Iu8mPN1wvBwtWUwxVqGTmx4jWfD+cbrR3sNf+R4PXv4+MR0yUKNORtLccKuekMJB66CD6hrDdz9FtfUYuxJAFfOQoxUuOcKGlp/dUsaR5HMHyxaCOjlyvQuZNOAbuCnmkVwC2+YJ+ESrnkatCb57m+Zbf8GO3cny2CuyRZ3Gizm3tzurTPo3GN68ydH1JwgMsPYID7FYF9mcyg0jVjqyi8sklgOlXn51zXPtLIczDixfqkJl0u4zdnm6TqBS3acz1SnzKVEaMdIeyn3MA5IiSItLKucEKL5qp8OimccBKom6pELUW5ILbjm6hhje1XtJaaiTsuW1s2omUThhoqxeF6hj91MA1eKNtGABpxxc4IpIc2YcNHehNmSlBGA5KCxeOj8UQXMl9znoZIlPRKxCPT/Qzu/Prmr3N53D5LmctCgmkYCTqNzG+brpr4Y6zQJYglO1mBwORAJGz0b5iKQiwDPjpjOlUMUIGEHOXZYVtSWDwNjBWdux9a4EE/qpodUReEMSCFMWQNdjJRhBWrqTLMVzM/DAa/YsV+1Mc+m5OLXf73P58mXaukU84MFpwyUu2QO0eYVGByQJuU8KRZeIgWy291BGtFc2UWtIhJKpzVtBuqM9zrn9Zxd6ECODuIfVL2PSBz/AY78c35GK/o3lcEVHSCSJmGeuFTM2OGJzYwB+eRz6A9jcXNznsDCeeuvWLd/d3cXFqa1GvKbSTX7mYx/n1dt7kBTxgNAQHVzthI88u0GSRv7lMx/ms7/7WzR2iIYeai0TN1fmXrcKTX+tyNHhiF/+5L/lr779Mt4KajWuseytUvnsimlTVEWOmLlbPoMgKJZqvvTfPseTTzxZalPz+DFGnnzyydXiqdvb27K9vX3i/Wq04373/yGuGBFkBG4klgmo9rgsNe//4cffkBTBa7df8c2NBvb+DjuqcUsn7OkJmNCVPo8jGiL0N4a8693v5AMf+NGl57yylV0JRG9wlyIZrRxHPCfkMPNrEBiEN+4r6oL2CCmgoyOwpsjrDFxWjNma6TbrOIuMoF6OCm3nLOQMWhlUkakjkXO4tnzgJ6PUM6LFPLfSvFGkVCVJmbnQx06ojMt03MGDIF0nc+lAyZEII6qcehbAPFodVIVQFXMFxSQSPJB8jkk1I2SDCnpKGmLd5MWu1qDFS5NS1gTdJjcRkipdNVgXyVIULCGiK6d8Vgb1R97/AYaDjXObPT/02LvPdd156Pr1K/Le9z3uf/8P70dEaNt2qe+h6r4ssWkaer0ePVkNppW/jPb10O7url+9evIEi4eRdnZ2XFU5z3z/P94qM7dnaHeyAAAAAElFTkSuQmCC" alt="mascot" class="mascot-icon">
+  <img src="data:image/png;base64,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" alt="mascot2" class="mascot-icon-2">
+</div>
+
+  <div id="tasksView">
+  <div class="top-row">
+    <div class="capture">
+      <h2><span class="panel-icon c-orange"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-plus"/></svg></span>업무 등록</h2>
+      <div class="capture-fields">
+      <div class="capture-row">
+        <input type="text" id="taskInput" placeholder="예: [하나파워온] 추석 콘텐츠 기획" />
+        <input type="date" id="dateInput" />
+        <button class="addbtn" id="addBtn">추가</button>
+      </div>
+      <textarea id="memoInput" placeholder="메모 (선택)"></textarea>
+      <div class="capture-toggles">
+        <label class="recur"><input type="checkbox" id="importantCheck"> ⭐ 중요 업무예요</label>
+        <label class="recur"><input type="checkbox" id="repeatCheck"> 반복되는 업무예요</label>
+      </div>
+      <div class="repeat-options" id="repeatOptions" style="display:none;">
+        <select id="repeatType">
+          <option value="weekly">매주 특정 요일</option>
+          <option value="monthlyDate">매월 특정 일자</option>
+          <option value="monthlyLastDay">매월 마지막 날</option>
+          <option value="monthlyLastDayOffset">매월 마지막 날 기준 며칠 전</option>
+        </select>
+        <select id="repeatWeekdayInput">
+          <option value="1">월요일</option>
+          <option value="2">화요일</option>
+          <option value="3">수요일</option>
+          <option value="4">목요일</option>
+          <option value="5">금요일</option>
+          <option value="6">토요일</option>
+          <option value="0">일요일</option>
+        </select>
+        <input type="number" id="repeatDayInput" min="1" max="31" placeholder="일자 (예: 25)" style="display:none;" />
+        <input type="number" id="repeatOffsetInput" min="0" max="27" placeholder="며칠 전 (예: 7)" style="display:none;" />
+      </div>
+      </div>
+    </div>
+    <div class="panel panel-compact" id="statsPanel">
+      <h2><span class="panel-icon c-orange"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-checkbold"/></svg></span>완료 기록</h2>
+      <div class="sub">이번주 완료 업무의 프로젝트별 비중</div>
+      <div id="statsChart"></div>
+    </div>
+    <div class="panel panel-compact">
+      <h2><span class="panel-icon c-dark"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-calendar"/></svg></span>달력</h2>
+      <div class="cal-head">
+        <div class="cal-title" id="calTitle"></div>
+        <div class="cal-nav">
+          <button id="prevMonth">‹</button>
+          <button id="nextMonth">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2><span class="panel-icon c-yellow"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-clock"/></svg></span>오늘의 데일리 업무</h2>
+        <div class="sub">오늘 마감 · 이번주 D-day (반복 업무 포함)</div>
+        <div class="subhead">오늘 마감</div>
+        <div id="todayDueList"></div>
+        <div class="subhead">이번주</div>
+        <div id="weekList"></div>
+      </div>
+      <div class="panel">
+        <h2><span class="panel-icon c-yellow"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-pencil"/></svg></span>빠른 메모</h2>
+        <div class="sub">짧은 메모, 잡생각을 자유롭게 적어두는 공간이에요 (자동 저장)</div>
+        <textarea id="quickMemoInput" placeholder="여기에 적어보세요"></textarea>
+      </div>
+    </div>
+    <div class="panel">
+      <h2><span class="panel-icon c-blue"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-folder"/></svg></span>프로젝트별 업무</h2>
+      <div class="sub">[프로젝트명] 기준으로 그룹핑됨 · 클릭해서 수정 · ⠿ 드래그로 순서 변경</div>
+      <div id="projectList"></div>
+    </div>
+  </div>
+  </div>
+
+  <div id="careerView" style="display:none;">
+    <div class="capture" style="margin-bottom:20px;">
+      <div class="capture-row">
+        <select id="careerCategoryInput">
+          <option value="언론홍보">언론홍보</option>
+          <option value="디지털 마케팅">디지털 마케팅</option>
+          <option value="행사">행사</option>
+          <option value="캠페인">캠페인</option>
+          <option value="기타">기타</option>
+        </select>
+        <input type="month" id="careerStartInput">
+        <span class="career-tilde">~</span>
+        <input type="month" id="careerEndInput">
+        <label class="recur" style="margin:0;"><input type="checkbox" id="careerOngoingCheck"> 진행중</label>
+      </div>
+      <div class="career-field-label">기여도</div>
+      <div class="career-contrib-row">
+        <span class="career-contrib-label">기획</span>
+        <input type="number" id="careerPlanningPctInput" min="0" max="100" placeholder="0">
+        <span class="career-contrib-pct">%</span>
+        <span class="career-contrib-label">운영</span>
+        <input type="number" id="careerOperationPctInput" min="0" max="100" placeholder="0">
+        <span class="career-contrib-pct">%</span>
+      </div>
+      <div class="career-field-label">관련 프로젝트 (선택)</div>
+      <select id="careerProjectSelect" style="width:100%;"></select>
+      <input type="text" id="careerCustomProjectInput" placeholder="목록에 없다면 여기에 직접 입력하세요" style="width:100%;margin-top:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;">
+      <div class="career-field-label">어떤 일을 했는지</div>
+      <textarea id="careerWorkInput" placeholder="담당했던 업무 내용 (프로젝트를 선택하면 자동으로 채워져요)"></textarea>
+      <div class="career-field-label">성과 (결과)</div>
+      <textarea id="careerResultInput" placeholder="그 일로 어떤 결과·성과가 있었는지 적어보세요"></textarea>
+      <button class="addbtn" id="careerAddBtn" style="margin-top:10px;">기록 추가</button>
+    </div>
+    <div class="panel">
+      <h2><span class="panel-icon c-orange"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" fill="white"><use href="#pxi-trophy"/></svg></span>커리어 기록</h2>
+      <div class="sub">내가 낸 업무 성과를 시간순으로 남겨두는 공간이에요</div>
+      <div class="career-list-tools">
+        <button type="button" class="tool-btn" id="careerExcelBtn">⬇ 엑셀 다운로드</button>
+        <button type="button" class="tool-btn" id="careerExpandAllBtn">전체 펼치기</button>
+      </div>
+      <div id="careerList"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="dayModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalDateTitle"></h3>
+        <button class="modal-close" id="modalCloseBtn">×</button>
+      </div>
+      <div id="modalDayList"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="statModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="statModalTitle"></h3>
+        <button class="modal-close" id="statModalCloseBtn">×</button>
+      </div>
+      <div id="statModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const pad = (n) => String(n).padStart(2,'0');
+const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayObj = new Date();
+const todayKey = toKey(todayObj);
+
+let tasks = [];
+let projectColors = {};
+let projectOrder = [];
+let viewMonth = todayObj.getMonth();
+let viewYear = todayObj.getFullYear();
+let selectedDay = null;
+let editingTaskId = null;
+let draggedProjectKey = null;
+let careerEntries = [];
+let editingCareerId = null;
+let selectedCareerProject = null;
+let expandedCareerIds = new Set();
+let quickMemo = '';
+let quickMemoTimer = null;
+const CATEGORY_OPTIONS = ['언론홍보','디지털 마케팅','행사','캠페인','기타'];
+
+const PALETTE = ['#1363df','#47b5ff','#14a4de','#14ded7','#4414de','#1425de','#ffca47','#ff9447'];
+
+// 로컬 파일로 열어도 동작하도록 localStorage 사용 (같은 브라우저에서 이 파일을 다시 열면 유지됨)
+const STORAGE_PREFIX = 'upmoo-jihwiso:';
+function storageAvailable(){
+  try{
+    const k = '__test__';
+    localStorage.setItem(k,'1');
+    localStorage.removeItem(k);
+    return true;
+  }catch(e){ return false; }
+}
+const HAS_STORAGE = storageAvailable();
+let memoryStore = {};
+
+async function loadTasks(){
+  try{
+    const raw = HAS_STORAGE ? localStorage.getItem(STORAGE_PREFIX + 'tasks') : memoryStore['tasks'];
+    tasks = raw ? JSON.parse(raw) : [];
+  }catch(e){ tasks = []; }
+  try{
+    const rawC = HAS_STORAGE ? localStorage.getItem(STORAGE_PREFIX + 'projectColors') : memoryStore['projectColors'];
+    projectColors = rawC ? JSON.parse(rawC) : {};
+  }catch(e){ projectColors = {}; }
+  // 예전 팔레트로 배정된 색은 무효화해서 새 팔레트에서 다시 배정되도록 함
+  let colorsInvalidated = false;
+  Object.keys(projectColors).forEach(name => {
+    if(!PALETTE.includes(projectColors[name])){
+      delete projectColors[name];
+      colorsInvalidated = true;
+    }
+  });
+  if(colorsInvalidated) saveProjectColors();
+  try{
+    const rawO = HAS_STORAGE ? localStorage.getItem(STORAGE_PREFIX + 'projectOrder') : memoryStore['projectOrder'];
+    projectOrder = rawO ? JSON.parse(rawO) : [];
+  }catch(e){ projectOrder = []; }
+  try{
+    const rawK = HAS_STORAGE ? localStorage.getItem(STORAGE_PREFIX + 'careerEntries') : memoryStore['careerEntries'];
+    careerEntries = rawK ? JSON.parse(rawK) : [];
+  }catch(e){ careerEntries = []; }
+  try{
+    quickMemo = (HAS_STORAGE ? localStorage.getItem(STORAGE_PREFIX + 'quickMemo') : memoryStore['quickMemo']) || '';
+  }catch(e){ quickMemo = ''; }
+  careerEntries.forEach(c => {
+    if(c.startKey === undefined){
+      // 구버전(단일 날짜 title 기반) 데이터를 기간 기반 구조로 변환
+      c.startKey = c.date ? c.date.slice(0, 7) : todayKey.slice(0, 7);
+      c.ongoing = false;
+      c.endKey = null;
+      c.category = c.category || '기타';
+      if(!c.content && c.title) c.content = c.title;
+    }
+    if(c.workContent === undefined){
+      c.workContent = c.content || '';
+      c.result = c.result || '';
+      c.planningPct = c.planningPct === undefined ? null : c.planningPct;
+      c.operationPct = c.operationPct === undefined ? null : c.operationPct;
+    }
+  });
+  tasks.forEach(t => {
+    if(t.content === undefined){
+      const parsed = parseProject(t.text || '');
+      t.project = parsed.project;
+      t.content = parsed.content;
+    }
+    if(t.memo === undefined) t.memo = '';
+    if(t.repeat === undefined) t.repeat = null;
+    if(t.doneDates === undefined) t.doneDates = [];
+    if(t.important === undefined) t.important = false;
+    if(t.completedAt === undefined) t.completedAt = null;
+    if(t.recurring){ t.recurring = false; } // 구버전 '매일 반복' 필드는 더 이상 사용하지 않음
+  });
+  tasks.forEach(t => { if(t.project) getProjectColor(t.project); });
+  if(!HAS_STORAGE) showStorageWarning();
+}
+async function saveProjectColors(){
+  try{
+    const val = JSON.stringify(projectColors);
+    if(HAS_STORAGE) localStorage.setItem(STORAGE_PREFIX + 'projectColors', val);
+    else memoryStore['projectColors'] = val;
+  }catch(e){ console.error('save failed', e); }
+}
+async function saveProjectOrder(){
+  try{
+    const val = JSON.stringify(projectOrder);
+    if(HAS_STORAGE) localStorage.setItem(STORAGE_PREFIX + 'projectOrder', val);
+    else memoryStore['projectOrder'] = val;
+  }catch(e){ console.error('save failed', e); }
+}
+async function saveCareerEntries(){
+  try{
+    const val = JSON.stringify(careerEntries);
+    if(HAS_STORAGE) localStorage.setItem(STORAGE_PREFIX + 'careerEntries', val);
+    else memoryStore['careerEntries'] = val;
+  }catch(e){ console.error('save failed', e); }
+}
+async function saveQuickMemo(val){
+  try{
+    if(HAS_STORAGE) localStorage.setItem(STORAGE_PREFIX + 'quickMemo', val);
+    else memoryStore['quickMemo'] = val;
+  }catch(e){ console.error('save failed', e); }
+}
+function getProjectColor(name, register = true){
+  if(!projectColors[name]){
+    const used = Object.values(projectColors);
+    const avail = PALETTE.filter(c => !used.includes(c));
+    const pool = avail.length ? avail : PALETTE;
+    projectColors[name] = pool[Math.floor(Math.random() * pool.length)];
+    saveProjectColors();
+  }
+  if(register && !projectOrder.includes(name)){
+    projectOrder.push(name);
+    saveProjectOrder();
+  }
+  return projectColors[name];
+}
+// 실제 업무관리(tasks)에 등록된 프로젝트명만 추려서 순서대로 반환
+function taskProjectNames(){
+  const inUse = new Set(tasks.map(t => t.project).filter(Boolean));
+  return projectOrder.filter(p => inUse.has(p));
+}
+async function saveTasks(){
+  try{
+    const val = JSON.stringify(tasks);
+    if(HAS_STORAGE) localStorage.setItem(STORAGE_PREFIX + 'tasks', val);
+    else memoryStore['tasks'] = val;
+  }catch(e){ console.error('save failed', e); }
+}
+function daysInMonth(year, month){ return new Date(year, month+1, 0).getDate(); }
+
+function occurrenceForMonth(repeat, year, month){
+  if(repeat.type === 'monthlyDate'){
+    const dim = daysInMonth(year, month);
+    const day = Math.min(repeat.day, dim);
+    return `${year}-${pad(month+1)}-${pad(day)}`;
+  }
+  if(repeat.type === 'monthlyLastDay'){
+    const dim = daysInMonth(year, month);
+    return `${year}-${pad(month+1)}-${pad(dim)}`;
+  }
+  if(repeat.type === 'monthlyLastDayOffset'){
+    const dim = daysInMonth(year, month);
+    const d = new Date(year, month, dim - repeat.offset);
+    return toKey(d);
+  }
+  return null;
+}
+
+// 주어진 주(월요일 기준)에서 특정 요일의 날짜를 계산
+function occurrenceForWeek(repeat, mondayDate){
+  const offsetFromMonday = repeat.dayOfWeek === 0 ? 6 : repeat.dayOfWeek - 1;
+  const d = new Date(mondayDate);
+  d.setDate(d.getDate() + offsetFromMonday);
+  return toKey(d);
+}
+
+// 특정 날짜(key)에 해당 반복 규칙의 발생일이 걸리는지 여부 (캘린더 표시용)
+function occursOnDate(repeat, key){
+  if(repeat.type === 'weekly'){
+    const [y,m,d] = key.split('-').map(Number);
+    return new Date(y, m-1, d).getDay() === repeat.dayOfWeek;
+  }
+  const [y,m] = key.split('-').map(Number);
+  return occurrenceForMonth(repeat, y, m-1) === key;
+}
+
+// 반복 업무의 '현재 처리해야 할' 발생일을 계산: 이번 주기 발생일이 아직 완료 전이면 그걸(지연 포함), 완료됐으면 다음 주기 발생일
+function activeOccurrence(t){
+  if(!t.repeat) return t.dueDate;
+  if(t.repeat.type === 'weekly'){
+    const wr = getWeekRange(todayObj);
+    const thisWeekOcc = occurrenceForWeek(t.repeat, wr.monday);
+    if(thisWeekOcc && !(t.doneDates || []).includes(thisWeekOcc)) return thisWeekOcc;
+    const nextMonday = new Date(wr.monday); nextMonday.setDate(nextMonday.getDate() + 7);
+    return occurrenceForWeek(t.repeat, nextMonday);
+  }
+  const y = todayObj.getFullYear(), m = todayObj.getMonth();
+  const thisMonthOcc = occurrenceForMonth(t.repeat, y, m);
+  if(thisMonthOcc && !(t.doneDates || []).includes(thisMonthOcc)) return thisMonthOcc;
+  const nm = m === 11 ? 0 : m + 1;
+  const ny = m === 11 ? y + 1 : y;
+  return occurrenceForMonth(t.repeat, ny, nm);
+}
+
+function repeatLabel(repeat){
+  if(repeat.type === 'weekly') return `매주 ${['일','월','화','수','목','금','토'][repeat.dayOfWeek]}요일`;
+  if(repeat.type === 'monthlyDate') return `매월 ${repeat.day}일`;
+  if(repeat.type === 'monthlyLastDay') return '매월 말일';
+  if(repeat.type === 'monthlyLastDayOffset') return `매월 말일 ${repeat.offset}일 전`;
+  return '반복';
+}
+
+function showStorageWarning(){
+  const w = document.createElement('div');
+  w.style.cssText = 'background:#fbe4dc;color:#bd5638;border:1px solid #f0c4b2;border-radius:8px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;';
+  w.textContent = '이 브라우저에서는 저장 기능이 막혀 있어 새로고침하면 입력한 내용이 사라져요. 시크릿/프라이빗 모드가 아닌 일반 창에서 열어주세요.';
+  document.querySelector('.wrap').insertBefore(w, document.querySelector('.capture'));
+}
+
+function fmtDate(key){
+  const [y,m,d] = key.split('-').map(Number);
+  const dow = ['일','월','화','수','목','금','토'][new Date(y,m-1,d).getDay()];
+  return `${m}/${d} (${dow})`;
+}
+function diffDays(key){
+  const [y,m,d] = key.split('-').map(Number);
+  const target = new Date(y,m-1,d);
+  const t0 = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+  return Math.round((target - t0) / 86400000);
+}
+function getWeekRange(refDate){
+  refDate = refDate || todayObj;
+  // 이번주 = 기준일 기준 월요일 ~ 일요일
+  const t0 = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
+  const dow = t0.getDay(); // 0=일 ... 6=토
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(t0); monday.setDate(t0.getDate() + mondayOffset);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  return { start: toKey(monday), end: toKey(sunday), monday };
+}
+
+function completeTask(id){
+  const t = tasks.find(t => t.id === id);
+  if(!t) return;
+  if(t.repeat){
+    const occ = activeOccurrence(t);
+    if(occ && !t.doneDates.includes(occ)) t.doneDates.push(occ);
+  } else {
+    t.done = true;
+    t.completedAt = todayKey;
+  }
+}
+
+function renderTodayDue(){
+  const list = tasks
+    .filter(t => !t.done)
+    .map(t => ({ t, eff: t.repeat ? activeOccurrence(t) : t.dueDate }))
+    .filter(x => x.eff && x.eff <= todayKey)
+    .sort((a,b) => (b.t.important - a.t.important) || a.eff.localeCompare(b.eff));
+  const el = $('todayDueList');
+  if(list.length === 0){ el.innerHTML = '<div class="empty">오늘 마감인 업무가 없어요.</div>'; return; }
+  el.innerHTML = '';
+  list.forEach(({ t, eff }) => {
+    const { cls, badge } = statusBadge(eff);
+    const color = t.project ? getProjectColor(t.project) : null;
+    const row = document.createElement('div');
+    row.className = `task-row ${cls}`;
+    row.innerHTML = `
+      <input type="checkbox" data-id="${t.id}" class="due-check">
+      <div class="task-body">
+        <div class="task-text">${t.important ? '<span class="badge important">⭐ 중요</span> ' : ''}${color ? `<span class="proj-dot" style="background:${color}"></span>` : ''}${escapeHtml(t.content)}</div>
+        <div class="task-meta">${t.project ? escapeHtml(t.project) + ' · ' : ''}${badge}${t.repeat ? ` · ${repeatLabel(t.repeat)}` : ''}</div>
+      </div>
+      <button class="del" data-id="${t.id}" title="삭제">×</button>
+    `;
+    el.appendChild(row);
+  });
+  el.querySelectorAll('.due-check').forEach(cb => cb.addEventListener('change', async (e) => {
+    completeTask(e.target.dataset.id);
+    await saveTasks();
+    renderAll();
+  }));
+  el.querySelectorAll('.del').forEach(b => b.addEventListener('click', async (e) => {
+    tasks = tasks.filter(t => t.id !== e.target.dataset.id);
+    await saveTasks();
+    renderAll();
+  }));
+}
+
+function renderWeek(){
+  const { start, end } = getWeekRange();
+  const list = tasks
+    .filter(t => !t.done)
+    .map(t => ({ t, eff: t.repeat ? activeOccurrence(t) : t.dueDate }))
+    .filter(x => x.eff && x.eff > todayKey && x.eff >= start && x.eff <= end)
+    .sort((a,b) => (b.t.important - a.t.important) || a.eff.localeCompare(b.eff));
+  const el = $('weekList');
+  if(list.length === 0){ el.innerHTML = '<div class="empty">이번주 남은 마감 업무가 없어요.</div>'; return; }
+  el.innerHTML = '';
+  list.forEach(({ t, eff }) => {
+    const dd = diffDays(eff);
+    const color = t.project ? getProjectColor(t.project) : null;
+    const cls = dd < 0 ? 'overdue' : (dd <= 2 ? 'today' : '');
+    const badge = dd < 0 ? `<span class="badge overdue">지연 ${Math.abs(dd)}일</span>` : `<span class="badge soon">D-${dd}</span>`;
+    const row = document.createElement('div');
+    row.className = `task-row ${cls}`;
+    row.innerHTML = `
+      <input type="checkbox" data-id="${t.id}" class="week-check">
+      <div class="task-body">
+        <div class="task-text">${t.important ? '<span class="badge important">⭐ 중요</span> ' : ''}${color ? `<span class="proj-dot" style="background:${color}"></span>` : ''}${escapeHtml(t.content)}</div>
+        <div class="task-meta">${t.project ? escapeHtml(t.project) + ' · ' : ''}${fmtDate(eff)} ${badge}${t.repeat ? ` · ${repeatLabel(t.repeat)}` : ''}</div>
+      </div>
+      <button class="del" data-id="${t.id}" title="삭제">×</button>
+    `;
+    el.appendChild(row);
+  });
+  el.querySelectorAll('.week-check').forEach(cb => cb.addEventListener('change', async (e) => {
+    completeTask(e.target.dataset.id);
+    await saveTasks();
+    renderAll();
+  }));
+  el.querySelectorAll('.del').forEach(b => b.addEventListener('click', async (e) => {
+    tasks = tasks.filter(t => t.id !== e.target.dataset.id);
+    await saveTasks();
+    renderAll();
+  }));
+}
+
+function statusBadge(effDate){
+  if(!effDate) return { cls:'', badge:'<span class="badge upcoming">예정</span>' };
+  const dd = diffDays(effDate);
+  if(dd < 0) return { cls:'overdue', badge:`<span class="badge overdue">지연 ${Math.abs(dd)}일</span>` };
+  if(dd === 0) return { cls:'today', badge:'<span class="badge today">오늘 마감</span>' };
+  if(dd <= 2) return { cls:'today', badge:`<span class="badge soon">임박 D-${dd}</span>` };
+  return { cls:'', badge:'<span class="badge upcoming">예정</span>' };
+}
+
+function renderProjects(){
+  const list = tasks.filter(t => t.repeat || !t.done)
+    .map(t => ({ t, eff: t.repeat ? activeOccurrence(t) : t.dueDate }));
+  const el = $('projectList');
+  if(list.length === 0){ el.innerHTML = '<div class="empty">등록된 업무가 없어요.</div>'; return; }
+
+  const groups = {};
+  const order = [];
+  list.forEach(x => {
+    const key = x.t.project || '기타';
+    if(!groups[key]){ groups[key] = []; order.push(key); }
+    groups[key].push(x);
+  });
+  order.sort((a,b) => {
+    if(a === '기타') return 1;
+    if(b === '기타') return -1;
+    return projectOrder.indexOf(a) - projectOrder.indexOf(b);
+  });
+  order.forEach(key => {
+    groups[key].sort((a,b) => {
+      if(a.t.important !== b.t.important) return b.t.important - a.t.important;
+      if(!a.eff && !b.eff) return 0;
+      if(!a.eff) return 1;
+      if(!b.eff) return -1;
+      return a.eff.localeCompare(b.eff);
+    });
+  });
+
+  el.innerHTML = '';
+  order.forEach(key => {
+    const color = key !== '기타' ? getProjectColor(key) : null;
+    const draggableAttr = key !== '기타';
+    const group = document.createElement('div');
+    group.className = 'project-group';
+    group.style.background = color ? `${color}12` : 'var(--surface-2)';
+    group.style.borderColor = color ? `${color}45` : 'var(--border)';
+    if(draggableAttr) group.dataset.project = key;
+    group.innerHTML = `<div class="project-name" ${draggableAttr ? `draggable="true" data-project="${escapeAttr(key)}"` : ''}>${draggableAttr ? '<span class="drag-grip" title="드래그해서 순서 변경">⠿</span>' : ''}${color ? `<span class="proj-dot" style="background:${color}"></span>` : ''}${escapeHtml(key)}<span class="project-count">${groups[key].length}건</span></div>`;
+    groups[key].forEach(({ t, eff }) => {
+      const row = document.createElement('div');
+      if(editingTaskId === t.id){
+        row.className = 'task-row';
+        const dateFieldHtml = t.repeat ? `
+          <div class="repeat-options" style="margin-top:0;margin-bottom:6px;">
+            <select class="edit-repeat-type" id="edit-repeat-type-${t.id}" data-id="${t.id}">
+              <option value="weekly" ${t.repeat.type==='weekly'?'selected':''}>매주 특정 요일</option>
+              <option value="monthlyDate" ${t.repeat.type==='monthlyDate'?'selected':''}>매월 특정 일자</option>
+              <option value="monthlyLastDay" ${t.repeat.type==='monthlyLastDay'?'selected':''}>매월 마지막 날</option>
+              <option value="monthlyLastDayOffset" ${t.repeat.type==='monthlyLastDayOffset'?'selected':''}>매월 마지막 날 기준 며칠 전</option>
+            </select>
+            <select id="edit-repeat-weekday-${t.id}" style="display:${t.repeat.type==='weekly' ? '' : 'none'};">
+              ${[['1','월요일'],['2','화요일'],['3','수요일'],['4','목요일'],['5','금요일'],['6','토요일'],['0','일요일']].map(([v,l]) => `<option value="${v}" ${t.repeat.type==='weekly' && String(t.repeat.dayOfWeek)===v ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
+            <input type="number" min="1" max="31" id="edit-repeat-day-${t.id}" value="${t.repeat.type==='monthlyDate' ? t.repeat.day : ''}" placeholder="일자" style="display:${t.repeat.type==='monthlyDate' ? '' : 'none'};">
+            <input type="number" min="0" max="27" id="edit-repeat-offset-${t.id}" value="${t.repeat.type==='monthlyLastDayOffset' ? t.repeat.offset : ''}" placeholder="며칠 전" style="display:${t.repeat.type==='monthlyLastDayOffset' ? '' : 'none'};">
+          </div>
+        ` : `<input type="date" class="edit-content-input" id="edit-date-${t.id}" value="${t.dueDate || ''}" style="margin-bottom:6px;">`;
+        row.innerHTML = `
+          <div class="task-body">
+            <input type="text" class="edit-content-input" id="edit-content-${t.id}" value="${escapeAttr(t.content)}">
+            ${dateFieldHtml}
+            <textarea class="edit-memo-input" id="edit-memo-${t.id}" placeholder="메모">${escapeHtml(t.memo || '')}</textarea>
+            <label class="recur" style="margin-top:0;margin-bottom:6px;"><input type="checkbox" id="edit-important-${t.id}" ${t.important ? 'checked' : ''}> ⭐ 중요 업무예요</label>
+            <div class="edit-actions">
+              <button class="save-edit" data-id="${t.id}">저장</button>
+              <button class="cancel-edit" data-id="${t.id}">취소</button>
+            </div>
+          </div>
+        `;
+        group.appendChild(row);
+        return;
+      }
+      const { cls, badge } = statusBadge(eff);
+      const hasMemo = t.memo && t.memo.trim();
+      row.className = `task-row ${cls}`;
+      row.innerHTML = `
+        <input type="checkbox" data-id="${t.id}" class="proj-check">
+        <div class="task-body">
+          <div class="task-text ${hasMemo ? 'clickable' : ''}" data-memo-toggle="${t.id}">${t.important ? '<span class="badge important">⭐ 중요</span> ' : ''}${hasMemo ? '<span class="caret">▸</span>' : ''}${escapeHtml(t.content)}</div>
+          <div class="task-meta">${eff ? fmtDate(eff) + ' ' : ''}${badge}${t.repeat ? ` · ${repeatLabel(t.repeat)}` : ''}</div>
+          ${hasMemo ? `<div class="task-memo" id="memo-${t.id}">${escapeHtml(t.memo)}</div>` : ''}
+        </div>
+        <button class="edit-btn" data-id="${t.id}" title="수정">✎</button>
+        <button class="del" data-id="${t.id}" title="삭제">×</button>
+      `;
+      group.appendChild(row);
+    });
+    el.appendChild(group);
+  });
+
+  el.querySelectorAll('.project-name[draggable="true"]').forEach(handle => {
+    handle.addEventListener('dragstart', (e) => {
+      draggedProjectKey = e.currentTarget.dataset.project;
+      e.currentTarget.closest('.project-group').classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    handle.addEventListener('dragend', (e) => {
+      e.currentTarget.closest('.project-group').classList.remove('dragging');
+      el.querySelectorAll('.drag-over').forEach(g => g.classList.remove('drag-over'));
+      draggedProjectKey = null;
+    });
+  });
+  el.querySelectorAll('.project-group[data-project]').forEach(groupEl => {
+    groupEl.addEventListener('dragover', (e) => {
+      if(!draggedProjectKey || groupEl.dataset.project === draggedProjectKey) return;
+      e.preventDefault();
+      groupEl.classList.add('drag-over');
+    });
+    groupEl.addEventListener('dragleave', () => {
+      groupEl.classList.remove('drag-over');
+    });
+    groupEl.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      groupEl.classList.remove('drag-over');
+      const targetKey = groupEl.dataset.project;
+      if(!draggedProjectKey || draggedProjectKey === targetKey) return;
+      const fromIdx = projectOrder.indexOf(draggedProjectKey);
+      const toIdx = projectOrder.indexOf(targetKey);
+      if(fromIdx === -1 || toIdx === -1) return;
+      projectOrder.splice(fromIdx, 1);
+      projectOrder.splice(toIdx, 0, draggedProjectKey);
+      draggedProjectKey = null;
+      await saveProjectOrder();
+      renderProjects();
+    });
+  });
+
+  el.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', (e) => {
+    editingTaskId = e.currentTarget.dataset.id;
+    renderProjects();
+  }));
+  el.querySelectorAll('.edit-repeat-type').forEach(sel => sel.addEventListener('change', (e) => {
+    const id = e.target.dataset.id;
+    const type = e.target.value;
+    document.getElementById(`edit-repeat-weekday-${id}`).style.display = type === 'weekly' ? '' : 'none';
+    document.getElementById(`edit-repeat-day-${id}`).style.display = type === 'monthlyDate' ? '' : 'none';
+    document.getElementById(`edit-repeat-offset-${id}`).style.display = type === 'monthlyLastDayOffset' ? '' : 'none';
+  }));
+  el.querySelectorAll('.save-edit').forEach(b => b.addEventListener('click', async (e) => {
+    const id = e.target.dataset.id;
+    const t = tasks.find(t => t.id === id);
+    const newContent = document.getElementById(`edit-content-${id}`).value.trim();
+    const newMemo = document.getElementById(`edit-memo-${id}`).value.trim();
+    if(t && newContent){
+      t.content = newContent;
+      t.memo = newMemo;
+      t.text = t.project ? `[${t.project}] ${newContent}` : newContent;
+      const importantEl = document.getElementById(`edit-important-${id}`);
+      if(importantEl) t.important = importantEl.checked;
+      if(t.repeat){
+        const typeEl = document.getElementById(`edit-repeat-type-${id}`);
+        const type = typeEl.value;
+        if(type === 'weekly'){
+          const dayOfWeek = parseInt(document.getElementById(`edit-repeat-weekday-${id}`).value, 10);
+          t.repeat = { type: 'weekly', dayOfWeek };
+        } else if(type === 'monthlyDate'){
+          const day = Math.min(31, Math.max(1, parseInt(document.getElementById(`edit-repeat-day-${id}`).value, 10) || 1));
+          t.repeat = { type: 'monthlyDate', day };
+        } else if(type === 'monthlyLastDay'){
+          t.repeat = { type: 'monthlyLastDay' };
+        } else if(type === 'monthlyLastDayOffset'){
+          const offset = Math.min(27, Math.max(0, parseInt(document.getElementById(`edit-repeat-offset-${id}`).value, 10) || 7));
+          t.repeat = { type: 'monthlyLastDayOffset', offset };
+        }
+      } else {
+        const dateEl = document.getElementById(`edit-date-${id}`);
+        t.dueDate = dateEl ? (dateEl.value || null) : t.dueDate;
+      }
+    }
+    editingTaskId = null;
+    await saveTasks();
+    renderAll();
+  }));
+  el.querySelectorAll('.cancel-edit').forEach(b => b.addEventListener('click', () => {
+    editingTaskId = null;
+    renderProjects();
+  }));
+
+  el.querySelectorAll('[data-memo-toggle]').forEach(elx => elx.addEventListener('click', (e) => {
+    const id = e.currentTarget.dataset.memoToggle;
+    const memoEl = document.getElementById(`memo-${id}`);
+    const caret = e.currentTarget.querySelector('.caret');
+    if(!memoEl) return;
+    memoEl.classList.toggle('open');
+    if(caret) caret.classList.toggle('open');
+  }));
+
+  el.querySelectorAll('.proj-check').forEach(cb => cb.addEventListener('change', async (e) => {
+    completeTask(e.target.dataset.id);
+    await saveTasks();
+    renderAll();
+  }));
+  el.querySelectorAll('.del').forEach(b => b.addEventListener('click', async (e) => {
+    tasks = tasks.filter(t => t.id !== e.target.dataset.id);
+    await saveTasks();
+    renderAll();
+  }));
+}
+
+function tasksOnDate(key, year, month){
+  return tasks.filter(t => {
+    if(t.repeat) return occursOnDate(t.repeat, key);
+    return t.dueDate === key; // 완료된 업무도 기록으로 계속 표시
+  });
+}
+
+function renderCalendar(){
+  $('calTitle').textContent = `${viewYear}년 ${viewMonth+1}월`;
+  const grid = $('calGrid');
+  grid.innerHTML = '';
+  ['일','월','화','수','목','금','토'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+  const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+  const dim = daysInMonth(viewYear, viewMonth);
+  for(let i=0;i<firstDow;i++){
+    const blank = document.createElement('div');
+    blank.className = 'cal-cell blank';
+    grid.appendChild(blank);
+  }
+  for(let day=1; day<=dim; day++){
+    const key = `${viewYear}-${pad(viewMonth+1)}-${pad(day)}`;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (key === todayKey ? ' istoday' : '');
+    const dayTasks = tasksOnDate(key, viewYear, viewMonth);
+    let dotsHtml = '';
+    if(dayTasks.length){
+      dotsHtml = '<div class="cal-dots">' + dayTasks.slice(0,6).map(t => {
+        const isOverdue = diffDays(key) < 0;
+        const color = t.project ? getProjectColor(t.project) : 'var(--muted)';
+        const doneStyle = t.done ? 'opacity:.35;' : '';
+        const ring = (isOverdue && !t.done) ? 'box-shadow:0 0 0 1.5px var(--red);' : '';
+        return `<div class="cal-dot" style="background:${color};${ring}${doneStyle}"></div>`;
+      }).join('') + '</div>';
+    }
+    cell.innerHTML = `<div class="cal-daynum">${day}</div>${dotsHtml}`;
+    cell.style.cursor = 'pointer';
+    cell.addEventListener('click', () => showDayDetail(key));
+    grid.appendChild(cell);
+  }
+  // 항상 6주(42칸)를 채워서 월마다 달력 높이가 달라지지 않도록 고정
+  const filledCells = firstDow + dim;
+  const trailing = 42 - filledCells;
+  for(let i=0;i<trailing;i++){
+    const blank = document.createElement('div');
+    blank.className = 'cal-cell blank';
+    grid.appendChild(blank);
+  }
+}
+
+function showDayDetail(key){
+  selectedDay = key;
+  const [y,m] = key.split('-').map(Number);
+  const list = tasksOnDate(key, y, m-1);
+  $('modalDateTitle').textContent = `${fmtDate(key)} 업무`;
+  const el = $('modalDayList');
+  if(list.length === 0){
+    el.innerHTML = '<div class="empty">이 날짜에 등록된 업무가 없어요.</div>';
+  } else {
+    el.innerHTML = '';
+    list.forEach(t => {
+      const row = document.createElement('div');
+      row.className = 'task-row';
+      const isDone = t.repeat ? (t.doneDates || []).includes(key) : t.done;
+      const textStyle = isDone ? 'color:var(--muted);text-decoration:line-through;' : '';
+      row.innerHTML = `
+        <input type="checkbox" data-id="${t.id}" class="dd-check" ${isDone ? 'checked' : ''}>
+        <div class="task-body"><div class="task-text" style="${textStyle}">${t.important ? '<span class="badge important">⭐ 중요</span> ' : ''}${t.project ? `<span class="proj-dot" style="background:${getProjectColor(t.project)}"></span><span style="color:${getProjectColor(t.project)};">${escapeHtml(t.project)}</span> ` : ''}${escapeHtml(t.content)}${t.repeat ? `<span class="task-meta"> · ${repeatLabel(t.repeat)}</span>` : ''}</div></div>
+        <button class="del" data-id="${t.id}">×</button>
+      `;
+      el.appendChild(row);
+    });
+    el.querySelectorAll('.dd-check').forEach(cb => cb.addEventListener('change', async (e) => {
+      const t = tasks.find(t => t.id === e.target.dataset.id);
+      if(t){
+        if(t.repeat){
+          t.doneDates = t.doneDates || [];
+          if(e.target.checked){ if(!t.doneDates.includes(key)) t.doneDates.push(key); }
+          else { t.doneDates = t.doneDates.filter(d => d !== key); }
+        } else {
+          t.done = e.target.checked;
+          if(e.target.checked) t.completedAt = todayKey;
+        }
+      }
+      await saveTasks();
+      renderAll();
+      showDayDetail(key);
+    }));
+    el.querySelectorAll('.del').forEach(b => b.addEventListener('click', async (e) => {
+      tasks = tasks.filter(t => t.id !== e.target.dataset.id);
+      await saveTasks();
+      renderAll();
+      showDayDetail(key);
+    }));
+  }
+  $('dayModalOverlay').classList.add('open');
+}
+
+function closeDayModal(){
+  $('dayModalOverlay').classList.remove('open');
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function escapeAttr(s){
+  return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function polarPoint(cx, cy, r, angleDeg){
+  const rad = (angleDeg) * Math.PI / 180;
+  return { x: cx + r * Math.sin(rad), y: cy - r * Math.cos(rad) };
+}
+function donutSlicePath(cx, cy, rOuter, rInner, a0, a1){
+  const largeArc = (a1 - a0) > 180 ? 1 : 0;
+  const p0o = polarPoint(cx, cy, rOuter, a0);
+  const p1o = polarPoint(cx, cy, rOuter, a1);
+  const p1i = polarPoint(cx, cy, rInner, a1);
+  const p0i = polarPoint(cx, cy, rInner, a0);
+  return `M ${p0o.x.toFixed(2)} ${p0o.y.toFixed(2)} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${p1o.x.toFixed(2)} ${p1o.y.toFixed(2)} L ${p1i.x.toFixed(2)} ${p1i.y.toFixed(2)} A ${rInner} ${rInner} 0 ${largeArc} 0 ${p0i.x.toFixed(2)} ${p0i.y.toFixed(2)} Z`;
+}
+
+function showProjectWeekTasks(proj){
+  const { start, end } = getWeekRange(todayObj);
+  const items = [];
+  tasks.forEach(t => {
+    const key = t.project || '기타';
+    if(key !== proj) return;
+    if(t.repeat){
+      (t.doneDates || []).forEach(d => {
+        if(d >= start && d <= end) items.push({ content: t.content, date: d });
+      });
+    } else if(t.done && t.completedAt && t.completedAt >= start && t.completedAt <= end){
+      items.push({ content: t.content, date: t.completedAt });
+    }
+  });
+  items.sort((a, b) => a.date.localeCompare(b.date));
+
+  $('statModalTitle').textContent = `${proj} · 이번주 완료 업무`;
+  const body = $('statModalBody');
+  if(items.length === 0){
+    body.innerHTML = '<div class="empty">이번주 완료된 업무가 없어요.</div>';
+  } else {
+    body.innerHTML = items.map(it => `
+      <div class="task-row">
+        <div class="task-body">
+          <div class="task-text">${escapeHtml(it.content)}</div>
+          <div class="task-meta">${fmtDate(it.date)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  $('statModalOverlay').classList.add('open');
+}
+
+function closeStatModal(){
+  $('statModalOverlay').classList.remove('open');
+}
+
+function renderStats(){
+  const { start, end } = getWeekRange(todayObj);
+  const counts = {}; // key -> done count this week
+
+  // 이번주 완료된 건 (반복 업무는 그 주기의 완료 기록, 일반 업무는 완료 처리 시점 기준)
+  tasks.forEach(t => {
+    if(t.repeat){
+      (t.doneDates || []).forEach(d => {
+        if(d >= start && d <= end){
+          const key = t.project || '기타';
+          counts[key] = (counts[key] || 0) + 1;
+        }
+      });
+    } else if(t.done && t.completedAt && t.completedAt >= start && t.completedAt <= end){
+      const key = t.project || '기타';
+      counts[key] = (counts[key] || 0) + 1;
+    }
+  });
+
+  const el = $('statsChart');
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((sum, [, c]) => sum + c, 0);
+  if(entries.length === 0 || total === 0){
+    el.innerHTML = '<div class="empty">이번주 완료된 업무가 아직 없어요.</div>';
+    return;
+  }
+
+  const cx = 60, cy = 60, rOuter = 56, rInner = 34, rLabel = (rOuter + rInner) / 2;
+  let acc = 0;
+  const slices = [];
+  const labels = [];
+  entries.forEach(([proj, count]) => {
+    const color = proj === '기타' ? 'var(--muted)' : getProjectColor(proj);
+    const a0 = (acc / total) * 360;
+    acc += count;
+    const a1 = (acc / total) * 360;
+    slices.push(`<path d="${donutSlicePath(cx, cy, rOuter, rInner, a0, a1)}" fill="${color}"></path>`);
+    const pct = Math.round((count / total) * 100);
+    if((a1 - a0) >= 18){ // 너무 얇은 조각엔 글자가 안 들어가므로 생략
+      const mid = polarPoint(cx, cy, rLabel, (a0 + a1) / 2);
+      labels.push(`<text class="stat-pct-label" data-proj="${escapeAttr(proj)}" x="${mid.x.toFixed(2)}" y="${mid.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#fff">${pct}%</text>`);
+    }
+  });
+
+  const legend = entries.map(([proj, count]) => {
+    const color = proj === '기타' ? 'var(--muted)' : getProjectColor(proj);
+    return `
+      <div class="stats-legend-item">
+        <span class="stats-legend-dot" style="background:${color};"></span>
+        <span class="stats-legend-name">${escapeHtml(proj)}</span>
+      </div>
+    `;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="stats-donut-wrap">
+      <svg class="stats-donut" viewBox="0 0 120 120" width="168" height="168">
+        ${slices.join('')}
+        ${labels.join('')}
+        <circle cx="${cx}" cy="${cy}" r="${rInner - 1}" fill="var(--surface)"></circle>
+      </svg>
+      <div class="stats-legend">${legend}</div>
+    </div>
+  `;
+
+  el.querySelectorAll('.stat-pct-label').forEach(t => t.addEventListener('click', () => {
+    showProjectWeekTasks(t.dataset.proj);
+  }));
+}
+
+function renderAll(){
+  renderTodayDue();
+  renderWeek();
+  renderProjects();
+  renderCalendar();
+  renderStats();
+  equalizeTopRowHeights();
+}
+
+function equalizeTopRowHeights(){
+  const topRow = document.querySelector('.top-row');
+  if(!topRow) return;
+  const capture = topRow.querySelector('.capture');
+  const statsPanel = document.getElementById('statsPanel');
+  const panels = topRow.querySelectorAll('.panel');
+  const calendarPanel = panels.length > 1 ? panels[1] : null;
+  if(!capture || !statsPanel || !calendarPanel) return;
+  capture.style.height = 'auto';
+  capture.style.overflowY = '';
+  calendarPanel.style.height = 'auto';
+  calendarPanel.style.overflowY = '';
+  requestAnimationFrame(() => {
+    const targetHeight = statsPanel.offsetHeight;
+    [capture, calendarPanel].forEach(el => {
+      el.style.height = targetHeight + 'px';
+      if(el.scrollHeight > targetHeight + 1) el.style.overflowY = 'auto';
+    });
+  });
+}
+
+function fmtMonthKey(key){
+  if(!key) return '';
+  const [y,m] = key.split('-').map(Number);
+  return `${y}년 ${m}월`;
+}
+function careerPeriodLabel(c){
+  const start = fmtMonthKey(c.startKey);
+  const end = c.ongoing ? '진행중' : (c.endKey ? fmtMonthKey(c.endKey) : '');
+  return end ? `${start} ~ ${end}` : start;
+}
+
+// 특정 프로젝트에 등록된 업무 내용을 짧은 콤마 목록으로 생성 (예: 페이지관리, SNS 콘텐츠 기획)
+function generateProjectSummary(key){
+  const contents = tasks.filter(t => t.project === key).map(t => t.content).filter(Boolean);
+  const unique = [...new Set(contents)];
+  return unique.join(', ');
+}
+
+function applyCareerProjectSelection(){
+  const ta = $('careerWorkInput');
+  if(!selectedCareerProject){ return; }
+  const summary = generateProjectSummary(selectedCareerProject);
+  ta.value = summary; // 다른 프로젝트로 바꿔 누르면 이전 것과 섞이지 않도록 항상 교체
+}
+
+function renderCareerProjectSelect(){
+  const el = $('careerProjectSelect');
+  const options = ['<option value="">(선택 안 함)</option>']
+    .concat(taskProjectNames().map(key => `<option value="${escapeAttr(key)}" ${selectedCareerProject === key ? 'selected' : ''}>${escapeHtml(key)}</option>`));
+  el.innerHTML = options.join('');
+}
+
+function renderCareer(){
+  const el = $('careerList');
+  const filtered = careerEntries;
+  if(careerEntries.length === 0){ el.innerHTML = '<div class="empty">아직 기록된 성과가 없어요. 위에서 첫 기록을 남겨보세요.</div>'; return; }
+  const sorted = [...filtered].sort((a, b) => {
+    return b.startKey.localeCompare(a.startKey) || b.createdAt.localeCompare(a.createdAt);
+  });
+  el.innerHTML = '';
+  let lastYear = null;
+  sorted.forEach(c => {
+    const yLabel = `${c.startKey.split('-')[0]}년`;
+    if(yLabel !== lastYear){
+      const yEl = document.createElement('div');
+      yEl.className = 'career-month';
+      yEl.textContent = yLabel;
+      el.appendChild(yEl);
+      lastYear = yLabel;
+    }
+    const card = document.createElement('div');
+    card.className = 'career-entry';
+    if(editingCareerId === c.id){
+      const catOptions = CATEGORY_OPTIONS.map(cat => `<option value="${cat}" ${c.category === cat ? 'selected' : ''}>${cat}</option>`).join('');
+      let projList = taskProjectNames();
+      if(c.project && !projList.includes(c.project)) projList = [c.project, ...projList];
+      const projOptions = ['<option value="">(선택 안 함)</option>']
+        .concat(projList.map(p => `<option value="${escapeAttr(p)}" ${c.project === p ? 'selected' : ''}>${escapeHtml(p)}</option>`))
+        .join('');
+      card.innerHTML = `
+        <select class="edit-content-input" id="cedit-cat-${c.id}">${catOptions}</select>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap;">
+          <input type="month" id="cedit-start-${c.id}" value="${c.startKey}">
+          <span class="career-tilde">~</span>
+          <input type="month" id="cedit-end-${c.id}" value="${c.endKey || ''}" ${c.ongoing ? 'disabled' : ''}>
+          <label class="recur" style="margin:0;"><input type="checkbox" id="cedit-ongoing-${c.id}" ${c.ongoing ? 'checked' : ''}> 진행중</label>
+        </div>
+        <div class="career-contrib-row" style="margin-bottom:6px;">
+          <span class="career-contrib-label">기획</span>
+          <input type="number" min="0" max="100" id="cedit-planning-${c.id}" value="${c.planningPct ?? ''}">
+          <span class="career-contrib-pct">%</span>
+          <span class="career-contrib-label">운영</span>
+          <input type="number" min="0" max="100" id="cedit-operation-${c.id}" value="${c.operationPct ?? ''}">
+          <span class="career-contrib-pct">%</span>
+        </div>
+        <select class="edit-content-input" id="cedit-project-${c.id}">${projOptions}</select>
+        <textarea class="edit-memo-input" id="cedit-work-${c.id}" placeholder="어떤 일을 했는지">${escapeHtml(c.workContent || '')}</textarea>
+        <textarea class="edit-memo-input" id="cedit-result-${c.id}" placeholder="성과 (결과)">${escapeHtml(c.result || '')}</textarea>
+        <div class="edit-actions">
+          <button class="save-edit" data-id="${c.id}">저장</button>
+          <button class="cancel-edit" data-id="${c.id}">취소</button>
+        </div>
+      `;
+      el.appendChild(card);
+      return;
+    }
+    const color = c.project ? getProjectColor(c.project, false) : null;
+    const contribParts = [];
+    if(c.planningPct !== null && c.planningPct !== undefined) contribParts.push(`기획 ${c.planningPct}%`);
+    if(c.operationPct !== null && c.operationPct !== undefined) contribParts.push(`운영 ${c.operationPct}%`);
+    const isOpen = expandedCareerIds.has(c.id);
+    const headerLabel = c.project || c.category || '기록';
+    card.innerHTML = `
+      <div class="career-toggle-head" data-toggle="${c.id}">
+        <span class="caret ${isOpen ? 'open' : ''}">▸</span>
+        ${color ? `<span class="proj-dot" style="background:${color}"></span>` : ''}
+        <span class="career-toggle-label">${escapeHtml(headerLabel)}</span>
+        <span class="career-entry-date">${careerPeriodLabel(c)}</span>
+      </div>
+      <div class="career-entry-body ${isOpen ? 'open' : ''}" id="cbody-${c.id}">
+        <div class="career-entry-head">
+          <span class="career-cat-badge">${escapeHtml(c.category || '기타')}</span>
+          ${contribParts.length ? `<span class="career-entry-date">${contribParts.join(' · ')}</span>` : ''}
+        </div>
+        ${c.workContent ? `<div class="career-entry-content"><strong>한 일</strong> ${escapeHtml(c.workContent)}</div>` : ''}
+        ${c.result ? `<div class="career-entry-content"><strong>성과</strong> ${escapeHtml(c.result)}</div>` : ''}
+        <div class="career-entry-actions">
+          <button class="edit-btn" data-id="${c.id}" title="수정">✎ 수정</button>
+          <button class="del" data-id="${c.id}" title="삭제">× 삭제</button>
+        </div>
+      </div>
+    `;
+    el.appendChild(card);
+  });
+
+  const expandAllBtn = $('careerExpandAllBtn');
+  const allOpen = sorted.length > 0 && sorted.every(c => expandedCareerIds.has(c.id));
+  expandAllBtn.textContent = allOpen ? '전체 접기' : '전체 펼치기';
+  expandAllBtn.onclick = () => {
+    if(allOpen){
+      sorted.forEach(c => expandedCareerIds.delete(c.id));
+    } else {
+      sorted.forEach(c => expandedCareerIds.add(c.id));
+    }
+    renderCareer();
+  };
+
+  el.querySelectorAll('[data-toggle]').forEach(h => h.addEventListener('click', (e) => {
+    const id = e.currentTarget.dataset.toggle;
+    if(expandedCareerIds.has(id)) expandedCareerIds.delete(id);
+    else expandedCareerIds.add(id);
+    renderCareer();
+  }));
+
+  el.querySelectorAll('[id^="cedit-ongoing-"]').forEach(cb => cb.addEventListener('change', (e) => {
+    const id = e.target.id.replace('cedit-ongoing-', '');
+    const endInput = document.getElementById(`cedit-end-${id}`);
+    endInput.disabled = e.target.checked;
+    if(e.target.checked) endInput.value = '';
+  }));
+  el.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', (e) => {
+    editingCareerId = e.currentTarget.dataset.id;
+    renderCareer();
+  }));
+  el.querySelectorAll('.cancel-edit').forEach(b => b.addEventListener('click', () => {
+    editingCareerId = null;
+    renderCareer();
+  }));
+  el.querySelectorAll('.save-edit').forEach(b => b.addEventListener('click', async (e) => {
+    const id = e.target.dataset.id;
+    const c = careerEntries.find(c => c.id === id);
+    const startKey = document.getElementById(`cedit-start-${id}`).value;
+    if(c && startKey){
+      c.category = document.getElementById(`cedit-cat-${id}`).value;
+      c.startKey = startKey;
+      c.ongoing = document.getElementById(`cedit-ongoing-${id}`).checked;
+      c.endKey = c.ongoing ? null : (document.getElementById(`cedit-end-${id}`).value || null);
+      c.project = document.getElementById(`cedit-project-${id}`).value || null;
+      const pVal = document.getElementById(`cedit-planning-${id}`).value;
+      const oVal = document.getElementById(`cedit-operation-${id}`).value;
+      c.planningPct = pVal === '' ? null : Math.max(0, Math.min(100, parseInt(pVal, 10) || 0));
+      c.operationPct = oVal === '' ? null : Math.max(0, Math.min(100, parseInt(oVal, 10) || 0));
+      c.workContent = document.getElementById(`cedit-work-${id}`).value.trim();
+      c.result = document.getElementById(`cedit-result-${id}`).value.trim();
+      if(c.project) getProjectColor(c.project, false);
+    }
+    editingCareerId = null;
+    await saveCareerEntries();
+    renderCareer();
+  }));
+  el.querySelectorAll('.del').forEach(b => b.addEventListener('click', async (e) => {
+    careerEntries = careerEntries.filter(c => c.id !== e.currentTarget.dataset.id);
+    await saveCareerEntries();
+    renderCareer();
+  }));
+}
+
+async function addCareerEntry(){
+  const startKey = $('careerStartInput').value;
+  if(!startKey){ alert('시작 월을 선택해주세요.'); return; }
+  const category = $('careerCategoryInput').value;
+  const ongoing = $('careerOngoingCheck').checked;
+  const endKey = ongoing ? null : ($('careerEndInput').value || null);
+  const project = selectedCareerProject;
+  const planningPct = $('careerPlanningPctInput').value === '' ? null : Math.max(0, Math.min(100, parseInt($('careerPlanningPctInput').value, 10) || 0));
+  const operationPct = $('careerOperationPctInput').value === '' ? null : Math.max(0, Math.min(100, parseInt($('careerOperationPctInput').value, 10) || 0));
+  const workContent = $('careerWorkInput').value.trim();
+  const result = $('careerResultInput').value.trim();
+  if(!workContent){ alert('어떤 일을 했는지 내용을 적어주세요.'); return; }
+  if(project) getProjectColor(project, false);
+  careerEntries.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    category, project, startKey, endKey, ongoing,
+    planningPct, operationPct, workContent, result,
+    createdAt: new Date().toISOString()
+  });
+  await saveCareerEntries();
+  $('careerStartInput').value = '';
+  $('careerEndInput').value = '';
+  $('careerEndInput').disabled = false;
+  $('careerOngoingCheck').checked = false;
+  $('careerPlanningPctInput').value = '';
+  $('careerOperationPctInput').value = '';
+  $('careerWorkInput').value = '';
+  $('careerResultInput').value = '';
+  $('careerCustomProjectInput').value = '';
+  $('careerCategoryInput').selectedIndex = 0;
+  selectedCareerProject = null;
+  renderCareerProjectSelect();
+  renderCareer();
+}
+
+function switchTab(tab){
+  $('tasksView').style.display = tab === 'tasks' ? '' : 'none';
+  $('careerView').style.display = tab === 'career' ? '' : 'none';
+  $('tabTasks').classList.toggle('active', tab === 'tasks');
+  $('tabCareer').classList.toggle('active', tab === 'career');
+  if(tab === 'career'){
+    renderCareerProjectSelect();
+    renderCareer();
+  }
+}
+
+function parseProject(raw){
+  const m = raw.match(/^\s*\[(.+?)\]\s*(.*)$/);
+  if(m && m[2].trim()){
+    return { project: m[1].trim(), content: m[2].trim() };
+  }
+  return { project: null, content: raw };
+}
+
+async function addTask(){
+  const raw = $('taskInput').value.trim();
+  if(!raw) return;
+  const { project, content } = parseProject(raw);
+  const memo = $('memoInput').value.trim();
+  if(project) getProjectColor(project);
+
+  let repeat = null;
+  let dueDate = null;
+  if($('repeatCheck').checked){
+    const type = $('repeatType').value;
+    if(type === 'weekly'){
+      const dayOfWeek = parseInt($('repeatWeekdayInput').value, 10);
+      repeat = { type: 'weekly', dayOfWeek };
+    } else if(type === 'monthlyDate'){
+      const day = Math.min(31, Math.max(1, parseInt($('repeatDayInput').value, 10) || 1));
+      repeat = { type: 'monthlyDate', day };
+    } else if(type === 'monthlyLastDay'){
+      repeat = { type: 'monthlyLastDay' };
+    } else if(type === 'monthlyLastDayOffset'){
+      const offset = Math.min(27, Math.max(0, parseInt($('repeatOffsetInput').value, 10) || 7));
+      repeat = { type: 'monthlyLastDayOffset', offset };
+    }
+  } else {
+    dueDate = $('dateInput').value || null;
+  }
+
+  const important = $('importantCheck').checked;
+
+  tasks.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    text: raw, project, content, memo, important,
+    repeat, doneDates: [], dueDate, done: false, completedAt: null,
+    createdAt: todayKey
+  });
+  await saveTasks();
+  $('taskInput').value = '';
+  $('dateInput').value = '';
+  $('memoInput').value = '';
+  $('importantCheck').checked = false;
+  $('repeatCheck').checked = false;
+  $('repeatOptions').style.display = 'none';
+  $('repeatDayInput').value = '';
+  $('repeatOffsetInput').value = '';
+  $('dateInput').style.display = '';
+  renderAll();
+}
+
+$('repeatCheck').addEventListener('change', (e) => {
+  $('repeatOptions').style.display = e.target.checked ? 'flex' : 'none';
+  $('dateInput').style.display = e.target.checked ? 'none' : '';
+  if(e.target.checked) $('dateInput').value = '';
+  equalizeTopRowHeights();
+});
+$('repeatType').addEventListener('change', (e) => {
+  const type = e.target.value;
+  $('repeatWeekdayInput').style.display = type === 'weekly' ? '' : 'none';
+  $('repeatDayInput').style.display = type === 'monthlyDate' ? '' : 'none';
+  $('repeatOffsetInput').style.display = type === 'monthlyLastDayOffset' ? '' : 'none';
+});
+$('repeatType').dispatchEvent(new Event('change'));
+
+$('addBtn').addEventListener('click', addTask);
+$('taskInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') addTask(); });
+$('tabTasks').addEventListener('click', () => switchTab('tasks'));
+$('tabCareer').addEventListener('click', () => switchTab('career'));
+$('careerAddBtn').addEventListener('click', addCareerEntry);
+$('careerOngoingCheck').addEventListener('change', (e) => {
+  $('careerEndInput').disabled = e.target.checked;
+  if(e.target.checked) $('careerEndInput').value = '';
+});
+$('careerProjectSelect').addEventListener('change', (e) => {
+  selectedCareerProject = e.target.value || null;
+  if(selectedCareerProject) $('careerCustomProjectInput').value = '';
+  applyCareerProjectSelection();
+});
+$('careerCustomProjectInput').addEventListener('change', (e) => {
+  const val = e.target.value.trim();
+  selectedCareerProject = val || null;
+  renderCareerProjectSelect();
+  applyCareerProjectSelection();
+});
+$('quickMemoInput').addEventListener('input', (e) => {
+  clearTimeout(quickMemoTimer);
+  const val = e.target.value;
+  quickMemoTimer = setTimeout(() => { quickMemo = val; saveQuickMemo(val); }, 500);
+});
+$('prevMonth').addEventListener('click', () => {
+  viewMonth--; if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+  closeDayModal();
+  renderCalendar();
+});
+$('nextMonth').addEventListener('click', () => {
+  viewMonth++; if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+  closeDayModal();
+  renderCalendar();
+});
+$('modalCloseBtn').addEventListener('click', closeDayModal);
+$('dayModalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'dayModalOverlay') closeDayModal();
+});
+$('statModalCloseBtn').addEventListener('click', closeStatModal);
+$('statModalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'statModalOverlay') closeStatModal();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){ closeDayModal(); closeStatModal(); }
+});
+
+function exportData(){
+  const payload = { tasks, projectColors, projectOrder, careerEntries, quickMemo, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = `${todayObj.getFullYear()}${pad(todayObj.getMonth()+1)}${pad(todayObj.getDate())}`;
+  a.href = url;
+  a.download = `업무지휘소_backup_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportCareerExcel(){
+  if(typeof XLSX === 'undefined'){
+    alert('엑셀 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해주세요.');
+    return;
+  }
+  if(careerEntries.length === 0){
+    alert('내보낼 커리어 기록이 없어요.');
+    return;
+  }
+  const rows = [...careerEntries]
+    .sort((a, b) => b.startKey.localeCompare(a.startKey) || b.createdAt.localeCompare(a.createdAt))
+    .map(c => ({
+      '카테고리': c.category || '',
+      '프로젝트': c.project || '',
+      '기간': careerPeriodLabel(c),
+      '기획(%)': c.planningPct === null || c.planningPct === undefined ? '' : c.planningPct,
+      '운영(%)': c.operationPct === null || c.operationPct === undefined ? '' : c.operationPct,
+      '한 일': c.workContent || '',
+      '성과': c.result || ''
+    }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 12 }, { wch: 16 }, { wch: 20 }, { wch: 8 }, { wch: 8 }, { wch: 45 }, { wch: 45 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '커리어 기록');
+  const dateStr = `${todayObj.getFullYear()}${pad(todayObj.getMonth()+1)}${pad(todayObj.getDate())}`;
+  XLSX.writeFile(wb, `커리어기록_${dateStr}.xlsx`);
+}
+
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!Array.isArray(data.tasks)) throw new Error('invalid format');
+      const ok = confirm(`백업 파일을 불러오면 현재 저장된 업무(${tasks.length}건)를 덮어씁니다. 계속할까요?`);
+      if(!ok) return;
+      tasks = data.tasks;
+      projectColors = data.projectColors || {};
+      projectOrder = Array.isArray(data.projectOrder) ? data.projectOrder : [];
+      careerEntries = Array.isArray(data.careerEntries) ? data.careerEntries : [];
+      careerEntries.forEach(c => {
+        if(c.startKey === undefined){
+          c.startKey = c.date ? c.date.slice(0, 7) : todayKey.slice(0, 7);
+          c.ongoing = false;
+          c.endKey = null;
+          c.category = c.category || '기타';
+          if(!c.content && c.title) c.content = c.title;
+        }
+        if(c.workContent === undefined){
+          c.workContent = c.content || '';
+          c.result = c.result || '';
+          c.planningPct = c.planningPct === undefined ? null : c.planningPct;
+          c.operationPct = c.operationPct === undefined ? null : c.operationPct;
+        }
+      });
+      quickMemo = typeof data.quickMemo === 'string' ? data.quickMemo : '';
+      tasks.forEach(t => {
+        if(t.memo === undefined) t.memo = '';
+        if(t.repeat === undefined) t.repeat = null;
+        if(t.doneDates === undefined) t.doneDates = [];
+        if(t.important === undefined) t.important = false;
+        if(t.completedAt === undefined) t.completedAt = null;
+      });
+      await saveTasks();
+      await saveProjectColors();
+      await saveProjectOrder();
+      await saveCareerEntries();
+      await saveQuickMemo(quickMemo);
+      $('quickMemoInput').value = quickMemo;
+      renderAll();
+      alert('불러오기 완료했어요.');
+    }catch(err){
+      alert('올바른 백업 파일이 아니에요.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+$('exportBtn').addEventListener('click', exportData);
+$('careerExcelBtn').addEventListener('click', exportCareerExcel);
+$('importBtn').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(file) importData(file);
+  e.target.value = '';
+});
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(equalizeTopRowHeights, 200);
+});
+
+(async function init(){
+  $('todayStr').textContent = `${todayObj.getFullYear()}년 ${todayObj.getMonth()+1}월 ${todayObj.getDate()}일 · ${['일','월','화','수','목','금','토'][todayObj.getDay()]}요일`;
+  await loadTasks();
+  await renderAll();
+  $('quickMemoInput').value = quickMemo;
+})();
+</script>
+</body>
+</html>
